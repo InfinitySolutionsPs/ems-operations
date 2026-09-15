@@ -25,7 +25,13 @@ export async function ensureDataSheetImported(db: any) {
   let imported = 0;
   for (let i=0; i<seed.length; i+=40) {
     const statements = seed.slice(i,i+40).map((record:any) =>
-      db.prepare(sql).bind(...fields.map(([key]) => record[key] ?? null), "excel-import"),
+      db.prepare(sql).bind(
+        ...fields.map(([key]) => {
+          const value = record[key];
+          return typeof value === "boolean" ? (value ? 1 : 0) : value ?? null;
+        }),
+        "excel-import",
+      ),
     );
     const result = await db.batch(statements);
     imported += result.filter((x:any)=>x.success).length;
