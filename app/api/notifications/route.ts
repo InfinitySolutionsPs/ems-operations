@@ -1,0 +1,4 @@
+import { env } from "@/lib/server-env";
+import { NextRequest, NextResponse } from "next/server";
+export async function GET(request:NextRequest){const email=request.headers.get("oai-authenticated-user-email")||"admin@prcs.local";const result=await env.DB.prepare("SELECT * FROM notifications WHERE recipient IS NULL OR recipient=? ORDER BY created_at DESC LIMIT 30").bind(email).all();return NextResponse.json({notifications:result.results,unread:result.results.filter((x)=>!x.is_read).length});}
+export async function PATCH(request:NextRequest){const b=await request.json() as {id?:number;all?:boolean};if(b.all)await env.DB.prepare("UPDATE notifications SET is_read=1").run();else if(b.id)await env.DB.prepare("UPDATE notifications SET is_read=1 WHERE id=?").bind(b.id).run();return NextResponse.json({ok:true});}

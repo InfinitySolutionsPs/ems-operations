@@ -1,0 +1,2 @@
+CREATE INDEX `idx_maintenance_request_date_station_vehicle` ON `vehicle_maintenance` (`request_date`,`station_id`,`vehicle_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `idx_maintenance_one_open_vehicle` ON `vehicle_maintenance` (`vehicle_id`) WHERE status = 'open';

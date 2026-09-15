@@ -1,0 +1,1 @@
+ALTER TABLE `incidents` ADD `vehicle_id` integer REFERENCES vehicles(id);
