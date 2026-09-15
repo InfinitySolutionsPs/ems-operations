@@ -4,7 +4,7 @@ import { getAccess } from "@/lib/access";
 import { ensureDataSheetImported } from "@/lib/datasheet-import";
 
 export async function GET(request: NextRequest) {
-  await ensureDataSheetImported(env.DB);
+  await ensureDataSheetImported(env.DB).catch(() => ({ imported: 0, total: 0 }));
   const access=await getAccess(request); if(access.profile&&!access.profile.active)return NextResponse.json({error:"الحساب موقوف"},{status:403});
   const url = new URL(request.url);
   const from = url.searchParams.get("from") || "1900-01-01";

@@ -33,8 +33,20 @@ export async function ensureDataSheetImported(db: any) {
         "excel-import",
       ),
     );
-    const result = await db.batch(statements);
-    imported += result.filter((x:any)=>x.success).length;
+    try {
+      const result = await db.batch(statements);
+      imported += result.filter((x:any)=>x.meta?.changes).length;
+    } catch {
+      // A single legacy row must never prevent the dashboard from loading.
+      for (const statement of statements) {
+        try {
+          const result = await statement.run();
+          if (result.meta?.changes) imported++;
+        } catch {
+          // Keep the valid historical rows and skip only the incompatible row.
+        }
+      }
+    }
   }
   return { imported, total: seed.length };
 }

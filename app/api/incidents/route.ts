@@ -20,7 +20,7 @@ const minutesBetweenDates = (ad?: unknown, at?: unknown, bd?: unknown, bt?: unkn
 };
 
 export async function GET(request: NextRequest) {
-  await ensureDataSheetImported(env.DB);
+  await ensureDataSheetImported(env.DB).catch(() => ({ imported: 0, total: 0 }));
   const access = await getAccess(request);
   if (access.profile && !access.profile.active)
     return NextResponse.json({ error: "الحساب موقوف" }, { status: 403 });
