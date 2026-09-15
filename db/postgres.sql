@@ -27,3 +27,41 @@ CREATE INDEX IF NOT EXISTS idx_maintenance_request_date_station_vehicle ON vehic
 CREATE UNIQUE INDEX IF NOT EXISTS idx_maintenance_one_open_vehicle ON vehicle_maintenance(vehicle_id) WHERE status='open';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(lower(email)) WHERE email IS NOT NULL;
 INSERT INTO user_profiles (external_user_id,email,full_name,role,active) VALUES ('local-admin','admin@prcs.local','مدير النظام','admin',1) ON CONFLICT DO NOTHING;
+
+-- Merge duplicate employee names safely. The oldest record is retained and all
+-- operational, movement and fuel references are redirected before deletion.
+WITH duplicates AS (
+  SELECT id AS remove_id, MIN(id) OVER (PARTITION BY lower(regexp_replace(trim(full_name), '\s+', ' ', 'g'))) AS keep_id
+  FROM staff
+)
+UPDATE operational_assignments target SET staff_id = duplicates.keep_id
+FROM duplicates WHERE target.staff_id = duplicates.remove_id AND duplicates.remove_id <> duplicates.keep_id;
+
+WITH duplicates AS (
+  SELECT id AS remove_id, MIN(id) OVER (PARTITION BY lower(regexp_replace(trim(full_name), '\s+', ' ', 'g'))) AS keep_id
+  FROM staff
+)
+UPDATE vehicle_movements target SET driver_staff_id = duplicates.keep_id
+FROM duplicates WHERE target.driver_staff_id = duplicates.remove_id AND duplicates.remove_id <> duplicates.keep_id;
+
+WITH duplicates AS (
+  SELECT id AS remove_id, MIN(id) OVER (PARTITION BY lower(regexp_replace(trim(full_name), '\s+', ' ', 'g'))) AS keep_id
+  FROM staff
+)
+UPDATE fuel_fillings target SET driver_staff_id = duplicates.keep_id
+FROM duplicates WHERE target.driver_staff_id = duplicates.remove_id AND duplicates.remove_id <> duplicates.keep_id;
+
+WITH duplicates AS (
+  SELECT id AS remove_id, MIN(id) OVER (PARTITION BY lower(regexp_replace(trim(full_name), '\s+', ' ', 'g'))) AS keep_id
+  FROM staff
+)
+UPDATE fuel_fillings target SET filled_by_staff_id = duplicates.keep_id
+FROM duplicates WHERE target.filled_by_staff_id = duplicates.remove_id AND duplicates.remove_id <> duplicates.keep_id;
+
+DELETE FROM staff duplicate
+USING staff original
+WHERE duplicate.id > original.id
+  AND lower(regexp_replace(trim(duplicate.full_name), '\s+', ' ', 'g')) = lower(regexp_replace(trim(original.full_name), '\s+', ' ', 'g'));
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_staff_normalized_name
+ON staff (lower(regexp_replace(trim(full_name), '\s+', ' ', 'g')));

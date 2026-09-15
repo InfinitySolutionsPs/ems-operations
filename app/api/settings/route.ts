@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccess } from "@/lib/access";
 import staffArchive from "@/lib/staff-archive.json";
 
+const employeeNameKey = (value: unknown) =>
+  String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+
 export async function GET() {
   await env.DB.batch([
     env.DB.prepare(
@@ -23,9 +26,9 @@ export async function GET() {
     ).bind("RAF", "محطة رفح", "رفح"),
   ]);
   const existing = await env.DB.prepare("SELECT lower(trim(full_name)) name FROM staff").all();
-  const known = new Set(existing.results.map((x:any)=>x.name));
+  const known = new Set(existing.results.map((x:any)=>employeeNameKey(x.name)));
   const pending = (staffArchive as any[]).filter(row=>{
-    const name = String(row.fullName || "").trim().toLowerCase();
+    const name = employeeNameKey(row.fullName);
     if (!name || known.has(name)) return false;
     known.add(name);
     return true;
@@ -116,12 +119,7 @@ export async function POST(request: NextRequest) {
     const seen = new Map<string, number>();
     const duplicates: { keep: number; remove: number }[] = [];
     for (const row of all.results as any[]) {
-      // Only identical staff records are merged; sharing a name alone is insufficient.
-      const key = JSON.stringify([
-        String(row.full_name).trim().replace(/\s+/g, " ").toLowerCase(),
-        row.station_id, row.qualification, row.active,
-        row.cadre_type, row.job_title, row.detail,
-      ]);
+      const key = employeeNameKey(row.full_name);
       const keep = seen.get(key);
       if (keep !== undefined) duplicates.push({ keep, remove: row.id });
       else seen.set(key, row.id);
@@ -145,7 +143,7 @@ export async function POST(request: NextRequest) {
     let added = 0;
     const seen = new Set<string>();
     for (const row of staffArchive as any[]) {
-      const name = String(row.fullName || "").trim().toLowerCase();
+      const name = employeeNameKey(row.fullName);
       if (!name || seen.has(name)) continue;
       seen.add(name);
       const exists = await env.DB.prepare("SELECT id FROM staff WHERE lower(trim(full_name))=lower(trim(?)) LIMIT 1").bind(row.fullName).first();
