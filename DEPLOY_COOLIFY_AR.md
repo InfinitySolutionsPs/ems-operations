@@ -1,6 +1,22 @@
 # نشر نظام EMS على Coolify
 
-## 1. إنشاء PostgreSQL
+## الطريقة الجاهزة: Docker Compose
+
+هذه النسخة تحتوي التطبيق وPostgreSQL معًا. في Coolify اختاري **New Resource → Docker Compose** ثم اربطي مستودع GitHub. سيقرأ Coolify ملف `docker-compose.yml` تلقائيًا.
+
+أضيفي متغيرات البيئة التالية قبل النشر:
+
+```env
+POSTGRES_DB=ems
+POSTGRES_USER=ems
+POSTGRES_PASSWORD=<كلمة مرور قوية لقاعدة البيانات>
+APP_USERNAME=admin
+APP_PASSWORD=<كلمة مرور قوية لدخول النظام>
+```
+
+بعدها اضغطي **Deploy**. ينشئ النظام تلقائيًا قاعدة PostgreSQL والجداول وحجمي تخزين دائمين: واحد لقاعدة البيانات وآخر لمرفقات الصيانة.
+
+## الطريقة المنفصلة: إنشاء PostgreSQL
 
 من المشروع نفسه في Coolify اختاري **New Resource → Database → PostgreSQL** ثم أنشئي قاعدة البيانات. بعد تشغيلها انسخي **Internal Database URL**.
 
