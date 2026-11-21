@@ -95,11 +95,10 @@ const stations = [
   "محطة خانيونس",
   "محطة رفح",
 ];
-const categories = ["Medical", "Trauma", "Other"];
+const categories = ["Medical", "Trauma"];
 const categoryArabic: Record<string, string> = {
   Medical: "حالات مرضية",
   Trauma: "إصابات",
-  Other: "أخرى",
 };
 const urgencyArabic: Record<string, string> = {
   Red: "حمراء",
@@ -282,7 +281,6 @@ export default function HomePage() {
     { id: "dashboard", label: "الرئيسية", icon: Home },
     { id: "new", label: "تسجيل بلاغ", icon: PlusCircle },
     { id: "records", label: "سجل البلاغات", icon: ClipboardList },
-    { id: "capacity", label: "القدرة التشغيلية", icon: Gauge },
     { id: "coordination", label: "إدخال التنسيقات", icon: Route },
     { id: "fleet", label: "المركبات والوقود", icon: Ambulance },
     { id: "maintenance", label: "صيانة المركبات", icon: Wrench },
@@ -457,7 +455,6 @@ export default function HomePage() {
         {view === "settings" && (
           <SettingsView2 data={settingsData} reload={loadAux} />
         )}
-        {view === "capacity" && <OperationalCapacity data={settingsData} />}
         {view === "coordination" && <CoordinationView />}
         {view === "fleet" && <FleetView staff={settingsData.staff} stationsData={settingsData.stations} onImported={loadAux} />}
         {view === "maintenance" && <MaintenanceView onVehiclesChanged={loadAux} />}
